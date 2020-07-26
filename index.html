@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="icon" href="favicon.ico">
+    <title>Cisco Client Checker</title>
+
+    <script src="js/DetectRTC.js"></script>
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/ping.js"></script>
+    <script src="js/platform.js"></script>
+    <script src="js/speedtest.js"></script>
+    <script src="js/speedtest_worker.js"></script>
+
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <link href="css/check.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="cover-container d-flex h-100 p-3 mx-auto flex-column text-justify">
+
+    <!--Navigation bar-->
+    <header class="masthead mb-auto">
+        <div class="inner">
+            <nav class="nav nav-masthead justify-content-center">
+                <a class="nav-link active" href="#">Home</a>
+            </nav>
+        </div>
+    </header>
+
+    <!--Intro paragraph-->
+    <div class="pt-4">
+        <h1 class="text-center pb-3">Cisco Client Checker</h1>
+        <p class="lead">
+            Several tests will be performed to verify whether the client you are using to access this
+            website meets the minimum requirements to use the <i>Cisco video conferencing solution</i>.
+            Theese tests are broken down into three categories: browser tests, network tests, and peripheral tests.
+        </p>
+        <p class="lead">
+            Please note that some of these tests (namely the peripheral tests) will prompt you for
+            permission to access the relevant peripherals (i.e. microphone and camera).
+        </p>
+    </div>
+
+    <!--Browser Tests-->
+    <h4 class="pt-3">Browser Tests</h4>
+    <div class="row">
+        <div class="card-deck">
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: B1</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Compatible Browser?</h5>
+                    <p class="card-text text-dark">
+                        Only the following browsers are officially supported: Chrome, Chromium Edge,
+                        Firefox, Safari, Yandex.
+                    </p>
+                </div>
+                <div id="b1-status" class="card-footer bg-secondary">
+                    <small class="text-white">Test Status: Not started.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Network Tests-->
+    <h4 class="pt-3">Network Tests</h4>
+    <div class="row">
+        <div class="card-deck">
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: N1
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Download Speed > 2.5 Mbps?</h5>
+                    <p class="card-text text-dark">
+                        To be able to stream 720p, you need at least 2.5 Mbps of download speed.
+                        Otherwise the absolute minimum supported is 0.5 Mbps.
+                    </p>
+                </div>
+                <button id="download" type="button" class="btn btn-outline-danger" onclick="handleSpeedTestButton()">Click to Run Download/Upload Test</button>
+                <div id="n1-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
+                </div>
+            </div>
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: N2</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Upload Speed > 3 Mbps?</h5>
+                    <p class="card-text text-dark">
+                        To be able to stream 720p, you need at least 3 Mbps of download speed.
+                        Otherwise the absolute minimum supported is 0.5 Mbps.
+                    </p>
+                </div>
+                <button id="upload" type="button" class="btn btn-outline-danger" onclick="handleSpeedTestButton()">Click to Run Download/Upload Test</button>
+                <div id="n2-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
+                </div>
+            </div>
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: N3</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Latency < 500ms?</h5>
+                    <p class="card-text text-dark">
+                        The maximum round-trip-time (RTT) between the user client and the Cisco meeting servers
+                        is 500ms. Any higher would suffer from quality degradation.
+                    </p>
+                </div>
+                <div id="n3-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
+                </div>
+            </div>
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: N4</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Jitter < 30ms?</h5>
+                    <p class="card-text text-dark">
+                        The maximum jitter for the incoming packets received by user client is 30ms.
+                        Any higher would suffer from quality degradation.
+                    </p>
+                </div>
+                <div class="card-footer bg-secondary">
+                    <small class="text-white">Test Status: Coming soon!</small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!--Peripheral Tests-->
+    <h4 class="pt-3">Peripheral Tests</h4>
+    <div class="row">
+        <div class="card-deck">
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: P1</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Camera Permission Granted?</h5>
+                    <p class="card-text text-dark">
+                        Modern browsers only grant access permissions to a camera on trusted websites. Normally
+                        you are prompted with a pop-up to trust a website near your URL bar.
+                    </p>
+                </div>
+                <div id="p1-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
+                </div>
+            </div>
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: P2</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Microphone Permission Granted?</h5>
+                    <p class="card-text text-dark">
+                        Modern browsers only grant access permissions to a microphone on trusted websites. Normally
+                        you are prompted with a pop-up to trust a website near your URL bar.
+                    </p>
+                </div>
+                <div id="p2-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
+                </div>
+            </div>
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: P3</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Speaker Detected?</h5>
+                    <p class="card-text text-dark">
+                        Sometimes a speaker can be plugged in but not detected by the operating system. This could
+                        be due to a loose connection, missing drivers, or a host of other reasons.
+                    </p>
+                </div>
+                <div id="p3-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
+                </div>
+            </div>
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: P4</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Microphone Detected?</h5>
+                    <p class="card-text text-dark">
+                        Sometimes a microphone can be plugged in but not detected by the operating system. This could
+                        be due to a loose connection, missing drivers, or a host of other reasons.
+                    </p>
+                </div>
+                <div id="p4-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
+                </div>
+            </div>
+
+            <div class="card bg-light mb-3 limit-size">
+                <div class="card-header text-dark">Test: P5</div>
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-left">Camera Detected?</h5>
+                    <p class="card-text text-dark">
+                        Sometimes a camera can be plugged in but not detected by the operating system. This could
+                        be due to a loose connection, missing drivers, or a host of other reasons.
+                    </p>
+                </div>
+                <div id="p5-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer class="mastfoot mt-auto">
+        <div class="inner">
+            <p>Developed by Othman Alikhan.</p>
+        </div>
+    </footer>
+
+</div>
+<script type="text/javascript">
+    let STATUS_SUCCESS = 'Test Status: Success.'
+    let STATUS_FAILED = 'Test Status: Failed.'
+    let NOT_FOUND = -1;
+    let THRESHOLD_DL = 2.5;
+    let THRESHOLD_UL = 3.0;
+
+    /*************************************** BROWSER TESTS */
+
+    if (platform.name.indexOf("Chrome") !== NOT_FOUND
+        || platform.name.indexOf("Firefox") !== NOT_FOUND
+        || platform.name.indexOf("Microsoft Edge") !== NOT_FOUND
+        || platform.name.indexOf("Safari") !== NOT_FOUND) {
+        let RESULTS = 'Results: ' + platform.name + ' (' + platform.version + ')' + ', ' + platform.os;
+
+        // Show if mobile device used (e.g. iPad).
+        if (platform.product) {
+            RESULTS += ', ' + platform.product;
+        } else {
+            RESULTS += '.';
+        }
+
+        let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+        $("#b1-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+    } else {
+        let RESULTS = 'Results: ' + platform.name + ' (' + platform.version + ')' + ' is not compatible!';
+        let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+        $("#b1-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+    }
+
+    /*************************************** NETWORK TESTS */
+
+    var s = new Speedtest();
+
+    function handleSpeedTestButton() {
+        // Abort speedtest if running otherwise begin.
+        if (s.getState() == 3) {
+            s.abort();
+            data = null;
+
+        } else {
+            s.start();
+            s.onupdate = function (data) {
+                let RESULTS_DL = 'Results: ~' + data.dlStatus + ' Mbits/s';
+                let RESULTS_UL = 'Results: ~' + data.ulStatus + ' Mbits/s';
+
+                // Download test
+                if (data.dlStatus === "") {
+                    $("#n1-status").removeClass("bg-info").addClass("bg-warning");
+                } else if (parseFloat(data.dlStatus) > THRESHOLD_DL) {
+                    let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS_DL + '</small>';
+                    $("#n1-status").removeClass("bg-warning").removeClass("bg-danger").addClass("bg-success").html(SUCCESS);
+                } else {
+                    let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS_DL + '</small>';
+                    $("#n1-status").removeClass("bg-warning").removeClass("bg-success").addClass("bg-danger").html(FAILED);
+                }
+
+                // Upload test
+                if (data.ulStatus === "") {
+                    $("#n2-status").removeClass("bg-info").addClass("bg-warning");
+                } else if (parseFloat(data.ulStatus) > THRESHOLD_UL) {
+                    let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS_UL + '</small>';
+                    $("#n2-status").removeClass("bg-warning").removeClass("bg-danger").addClass("bg-success").html(SUCCESS);
+                } else {
+                    let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS_UL + '</small>';
+                    $("#n2-status").removeClass("bg-warning").removeClass("bg-success").addClass("bg-danger").html(FAILED);
+                }
+
+            }
+        }
+    }
+
+    var p = new Ping();
+    p.ping("http://localhost:8080/dashboard/speedtest", function(err, data) {
+        if (err) {
+            let RESULTS = 'Results: Unable to ping!';
+            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>';
+            $("#n3-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+
+        } else {
+            let RESULTS = 'Results: ~'+data+'ms.';
+            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>';
+            $("#n3-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+        }
+    });
+
+    /*************************************** PERIPHERAL TESTS */
+
+    navigator.getUserMedia (
+        { video: true, audio: true }, // constraints
+        function(localMediaStream) {}, // successCallback
+        function(err) { if(err === PERMISSION_DENIED) {} } // errorCallback
+    );
+
+    DetectRTC.load(function() {
+
+        if (DetectRTC.isWebsiteHasWebcamPermissions) {
+            let RESULTS = 'Results: Permission granted.'
+            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+            $("#p1-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+
+        } else {
+            let RESULTS = 'Results: Permission denied.'
+            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+            $("#p1-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+        }
+
+        if (DetectRTC.isWebsiteHasMicrophonePermissions) {
+            let RESULTS = 'Results: Permission granted.'
+            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+            $("#p2-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+
+        } else {
+            let RESULTS = 'Results: Permission denied.'
+            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+            $("#p2-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+        }
+
+        if (DetectRTC.hasSpeakers) {
+            let labels = [];
+            DetectRTC.audioOutputDevices.forEach(function(device) {
+                labels.push("> " + device.label);
+            });
+            let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
+            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+            $("#p3-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+
+        } else {
+            let RESULTS = 'Results: No device found.'
+            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+            $("#p3-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+        }
+
+        if (DetectRTC.hasMicrophone) {
+            let labels = [];
+            DetectRTC.audioInputDevices.forEach(function(device) {
+                labels.push("> " + device.label);
+            });
+            let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
+            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+            $("#p4-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+
+        } else {
+            let RESULTS = 'Results: No device found.'
+            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+            $("#p4-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+        }
+
+        if (DetectRTC.hasWebcam) {
+            let labels = [];
+            DetectRTC.videoInputDevices.forEach(function(device) {
+                labels.push("> " + device.label);
+            });
+            let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
+            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+            $("#p5-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+
+        } else {
+            let RESULTS = 'Results: No device found.'
+            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+            $("#p5-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+        }
+    })
+</script>
+</body>
+</html>
