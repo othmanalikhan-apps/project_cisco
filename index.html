@@ -79,7 +79,7 @@
                         Otherwise the absolute minimum supported is 0.5 Mbps.
                     </p>
                 </div>
-                <button id="download" type="button" class="btn btn-outline-danger" onclick="handleSpeedTestButton()">Click to Run Download/Upload Test</button>
+                <button type="button" class="btn btn-outline-danger" onclick="handleNetworkTest()">Click to Run Network Tests</button>
                 <div id="n1-status" class="card-footer bg-info">
                     <small class="text-white">Test Status: Pending...</small>
                 </div>
@@ -94,7 +94,7 @@
                         Otherwise the absolute minimum supported is 0.5 Mbps.
                     </p>
                 </div>
-                <button id="upload" type="button" class="btn btn-outline-danger" onclick="handleSpeedTestButton()">Click to Run Download/Upload Test</button>
+                <button type="button" class="btn btn-outline-danger" onclick="handleNetworkTest()">Click to Run Network Test</button>
                 <div id="n2-status" class="card-footer bg-info">
                     <small class="text-white">Test Status: Pending...</small>
                 </div>
@@ -105,10 +105,11 @@
                 <div class="card-body">
                     <h5 class="card-title text-dark text-left">Latency < 500ms?</h5>
                     <p class="card-text text-dark">
-                        The maximum round-trip-time (RTT) between the user client and the Cisco meeting servers
+                        The maximum network round-trip-time (RTT) between the user client and the Cisco meeting servers
                         is 500ms. Any higher would suffer from quality degradation.
                     </p>
                 </div>
+                <button type="button" class="btn btn-outline-danger" onclick="handleNetworkTest()">Click to Run Network Test</button>
                 <div id="n3-status" class="card-footer bg-info">
                     <small class="text-white">Test Status: Pending...</small>
                 </div>
@@ -123,8 +124,9 @@
                         Any higher would suffer from quality degradation.
                     </p>
                 </div>
-                <div class="card-footer bg-secondary">
-                    <small class="text-white">Test Status: Coming soon!</small>
+                <button id="jitter" type="button" class="btn btn-outline-danger" onclick="handleNetworkTest()">Click to Run Network Test</button>
+                <div id="n4-status" class="card-footer bg-info">
+                    <small class="text-white">Test Status: Pending...</small>
                 </div>
             </div>
 
@@ -145,6 +147,7 @@
                         you are prompted with a pop-up to trust a website near your URL bar.
                     </p>
                 </div>
+                <button type="button" class="btn btn-outline-danger" onclick="handlePermissions()">Click to Run Permission Test</button>
                 <div id="p1-status" class="card-footer bg-info">
                     <small class="text-white">Test Status: Pending...</small>
                 </div>
@@ -159,6 +162,7 @@
                         you are prompted with a pop-up to trust a website near your URL bar.
                     </p>
                 </div>
+                <button type="button" class="btn btn-outline-danger" onclick="handlePermissions()">Click to Run Permission Test</button>
                 <div id="p2-status" class="card-footer bg-info">
                     <small class="text-white">Test Status: Pending...</small>
                 </div>
@@ -173,6 +177,7 @@
                         be due to a loose connection, missing drivers, or a host of other reasons.
                     </p>
                 </div>
+                <button type="button" class="btn btn-outline-danger" onclick="handlePermissions()">Click to Run Permission Test</button>
                 <div id="p3-status" class="card-footer bg-info">
                     <small class="text-white">Test Status: Pending...</small>
                 </div>
@@ -187,6 +192,7 @@
                         be due to a loose connection, missing drivers, or a host of other reasons.
                     </p>
                 </div>
+                <button type="button" class="btn btn-outline-danger" onclick="handlePermissions()">Click to Run Permission Test</button>
                 <div id="p4-status" class="card-footer bg-info">
                     <small class="text-white">Test Status: Pending...</small>
                 </div>
@@ -201,6 +207,7 @@
                         be due to a loose connection, missing drivers, or a host of other reasons.
                     </p>
                 </div>
+                <button type="button" class="btn btn-outline-danger" onclick="handlePermissions()">Click to Run Permission Test</button>
                 <div id="p5-status" class="card-footer bg-info">
                     <small class="text-white">Test Status: Pending...</small>
                 </div>
@@ -222,6 +229,8 @@
     let NOT_FOUND = -1;
     let THRESHOLD_DL = 2.5;
     let THRESHOLD_UL = 3.0;
+    let THRESHOLD_PING = 500.0;
+    let THRESHOLD_JITTER = 30.0;
 
     /*************************************** BROWSER TESTS */
 
@@ -248,9 +257,20 @@
 
     /*************************************** NETWORK TESTS */
 
-    var s = new Speedtest();
+    var SERVER = {
+        name: "Digital Ocean",
+        server: "https://cisco.applicationchecker.com",
+        dlURL: "backend/garbage.php",
+        ulURL: "backend/empty.php",
+        pingURL: "backend/empty.php",
+        getIpURL: "backend/getIP.php"
+    }
 
-    function handleSpeedTestButton() {
+    var s = new Speedtest();
+    s.addTestPoint(SERVER);
+    s.selectServer();
+
+    function handleNetworkTest() {
         // Abort speedtest if running otherwise begin.
         if (s.getState() == 3) {
             s.abort();
@@ -261,6 +281,8 @@
             s.onupdate = function (data) {
                 let RESULTS_DL = 'Results: ~' + data.dlStatus + ' Mbits/s';
                 let RESULTS_UL = 'Results: ~' + data.ulStatus + ' Mbits/s';
+                let RESULTS_PING = 'Results: ~' + data.pingStatus + ' ms';
+                let RESULTS_JITTER = 'Results: ~' + data.jitterStatus + ' ms';
 
                 // Download test
                 if (data.dlStatus === "") {
@@ -284,101 +306,111 @@
                     $("#n2-status").removeClass("bg-warning").removeClass("bg-success").addClass("bg-danger").html(FAILED);
                 }
 
+                // Ping test
+                if (data.pingStatus === "") {
+                    $("#n3-status").removeClass("bg-info").addClass("bg-warning");
+                } else if (parseFloat(data.pingStatus) < THRESHOLD_PING) {
+                    let RESULTS = 'Results: ~'+data.pingStatus+'ms.';
+                    let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS_PING + '</small>';
+                    $("#n3-status").removeClass("bg-warning").addClass("bg-success").html(SUCCESS);
+                } else {
+                    let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS_PING + '</small>';
+                    $("#n3-status").removeClass("bg-warning").addClass("bg-danger").html(FAILED);
+                }
+
+                // Jitter test
+                if (data.jitterStatus === "") {
+                    $("#n4-status").removeClass("bg-info").addClass("bg-warning");
+                } else if (parseFloat(data.jitterStatus) < THRESHOLD_JITTER) {
+                    let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS_JITTER + '</small>';
+                    $("#n4-status").removeClass("bg-warning").removeClass("bg-danger").addClass("bg-success").html(SUCCESS);
+                } else {
+                    let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS_JITTER + '</small>';
+                    $("#n4-status").removeClass("bg-warning").removeClass("bg-success").addClass("bg-danger").html(FAILED);
+                }
             }
         }
     }
 
-    var p = new Ping();
-    p.ping("http://localhost:8080/dashboard/speedtest", function(err, data) {
-        if (err) {
-            let RESULTS = 'Results: Unable to ping!';
-            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>';
-            $("#n3-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
-
-        } else {
-            let RESULTS = 'Results: ~'+data+'ms.';
-            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>';
-            $("#n3-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
-        }
-    });
-
     /*************************************** PERIPHERAL TESTS */
 
-    navigator.getUserMedia (
+    navigator.mediaDevices.getUserMedia (
         { video: true, audio: true }, // constraints
         function(localMediaStream) {}, // successCallback
         function(err) { if(err === PERMISSION_DENIED) {} } // errorCallback
     );
 
-    DetectRTC.load(function() {
+    function handlePermissions() {
+        DetectRTC.load(function() {
 
-        if (DetectRTC.isWebsiteHasWebcamPermissions) {
-            let RESULTS = 'Results: Permission granted.'
-            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
-            $("#p1-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+            if (DetectRTC.isWebsiteHasWebcamPermissions) {
+                let RESULTS = 'Results: Permission granted.'
+                let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+                $("#p1-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
 
-        } else {
-            let RESULTS = 'Results: Permission denied.'
-            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
-            $("#p1-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
-        }
+            } else {
+                let RESULTS = 'Results: Permission denied.'
+                let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+                $("#p1-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+            }
 
-        if (DetectRTC.isWebsiteHasMicrophonePermissions) {
-            let RESULTS = 'Results: Permission granted.'
-            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
-            $("#p2-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+            if (DetectRTC.isWebsiteHasMicrophonePermissions) {
+                let RESULTS = 'Results: Permission granted.'
+                let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+                $("#p2-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
 
-        } else {
-            let RESULTS = 'Results: Permission denied.'
-            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
-            $("#p2-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
-        }
+            } else {
+                let RESULTS = 'Results: Permission denied.'
+                let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+                $("#p2-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+            }
 
-        if (DetectRTC.hasSpeakers) {
-            let labels = [];
-            DetectRTC.audioOutputDevices.forEach(function(device) {
-                labels.push("> " + device.label);
-            });
-            let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
-            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
-            $("#p3-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+            if (DetectRTC.hasSpeakers) {
+                let labels = [];
+                DetectRTC.audioOutputDevices.forEach(function(device) {
+                    labels.push("> " + device.label);
+                });
+                let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
+                let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+                $("#p3-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
 
-        } else {
-            let RESULTS = 'Results: No device found.'
-            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
-            $("#p3-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
-        }
+            } else {
+                let RESULTS = 'Results: No device found.'
+                let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+                $("#p3-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+            }
 
-        if (DetectRTC.hasMicrophone) {
-            let labels = [];
-            DetectRTC.audioInputDevices.forEach(function(device) {
-                labels.push("> " + device.label);
-            });
-            let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
-            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
-            $("#p4-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+            if (DetectRTC.hasMicrophone) {
+                let labels = [];
+                DetectRTC.audioInputDevices.forEach(function(device) {
+                    labels.push("> " + device.label);
+                });
+                let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
+                let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+                $("#p4-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
 
-        } else {
-            let RESULTS = 'Results: No device found.'
-            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
-            $("#p4-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
-        }
+            } else {
+                let RESULTS = 'Results: No device found.'
+                let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+                $("#p4-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+            }
 
-        if (DetectRTC.hasWebcam) {
-            let labels = [];
-            DetectRTC.videoInputDevices.forEach(function(device) {
-                labels.push("> " + device.label);
-            });
-            let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
-            let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
-            $("#p5-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
+            if (DetectRTC.hasWebcam) {
+                let labels = [];
+                DetectRTC.videoInputDevices.forEach(function(device) {
+                    labels.push("> " + device.label);
+                });
+                let RESULTS = 'Results: Found ' + labels.length + ' devices.</br>' + labels.join('</br>')
+                let SUCCESS = '<small class="text-white">' + STATUS_SUCCESS + '</br>' + RESULTS + '</small>'
+                $("#p5-status").removeClass("bg-info").addClass("bg-success").html(SUCCESS);
 
-        } else {
-            let RESULTS = 'Results: No device found.'
-            let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
-            $("#p5-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
-        }
-    })
+            } else {
+                let RESULTS = 'Results: No device found.'
+                let FAILED = '<small class="text-white">' + STATUS_FAILED + '</br>' + RESULTS + '</small>'
+                $("#p5-status").removeClass("bg-info").addClass("bg-danger").html(FAILED);
+            }
+        })
+    }
 </script>
 </body>
 </html>
