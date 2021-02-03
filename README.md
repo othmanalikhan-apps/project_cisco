@@ -64,6 +64,6 @@ Acknowledgements
 ----------------
 ##### Reference Code
 - Below are scripts that were used or heavily inspired this project:
-    - @alfeg https://github.com/alfg/ping.js/
+    - https://github.com/alfg/ping.js/
     - https://github.com/bestiejs/platform.js#readme
     - https://github.com/muaz-khan/DetectRTC
