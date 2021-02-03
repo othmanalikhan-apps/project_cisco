@@ -2,7 +2,7 @@ Project Cisco
 =============
 
 <p align="center">
-  <img align="middle" width=500 src="assets/demo.png">
+  <img align="middle" width=700 src="assets/demo.png">
 </p>
 
 [![Last Commit](https://img.shields.io/github/last-commit/othmanempire/project_cisco)](https://github.com/OthmanEmpire/project_cisco)
