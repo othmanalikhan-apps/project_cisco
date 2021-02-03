@@ -1,12 +1,9 @@
 Project Cisco
 =============
 
-<br><br>
 <p align="center">
-  <img align="middle" width=300 src="assets/demo.png">
+  <img align="middle" width=500 src="assets/demo.png">
 </p>
-<br><br>
-
 
 [![Last Commit](https://img.shields.io/github/last-commit/othmanempire/project_cisco)](https://github.com/OthmanEmpire/project_cisco)
 [![Issues](https://img.shields.io/github/issues-raw/othmanempire/project_cisco)](https://github.com/OthmanEmpire/project_cisco)
@@ -67,6 +64,6 @@ Acknowledgements
 ----------------
 ##### Reference Code
 - Below are scripts that were used or heavily inspired this project:
-    - https://github.com/alfg/ping.js/
+    - @alfeg https://github.com/alfg/ping.js/
     - https://github.com/bestiejs/platform.js#readme
     - https://github.com/muaz-khan/DetectRTC
